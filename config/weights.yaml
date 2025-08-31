@@ -1,0 +1,27 @@
+w_concentration: 0.15
+w_ownership_penalty: 0.10
+w_ou: 0.20
+w_proe_pace: 0.25
+w_spread: 0.15
+w_venue_weather: 0.15
+
+# Tier allocation for lineup building
+tier_A_share: 0.7
+tier_B_share: 0.25
+tier_C_share: 0.05
+
+# Lineup constraints
+min_salary: 49600
+max_salary: 50000
+low_owned_threshold_pct: 5
+min_low_owned_per_lu: 1
+min_sub10_owned_per_lu: 2
+cum_own_cap_pct: 125
+
+# Stack configuration
+allow_3v0_spread_cutoff: 7.5
+allow_3v0_wind_cutoff: 15
+pct_3v1: 0.70
+pct_3v0: 0.15
+pct_4v1: 0.10
+pct_2v1: 0.05
