@@ -8,7 +8,7 @@ Generate 150 lineups using proper stacking rules:
 import pandas as pd
 import random
 import collections
-from utils import read_weights, load_dk, load_optional, ownership_proxy, projection_proxy, lineup_score
+from utils import read_weights, load_dk, load_optional, lineup_score
 
 def get_opponent_team(qb_team, schedule_df):
     """Get the opponent team for a given QB's team from the schedule"""
@@ -160,8 +160,17 @@ def main():
     
     # Load data
     dk_df = load_dk("DKSalaries.csv")
-    proj_df = projection_proxy(dk_df)
-    own_df = ownership_proxy(dk_df)
+    
+    # Load real projections and ownership if available
+    proj_df = load_optional("projections.csv")
+    own_df = load_optional("ownership.csv")
+    
+    # Validate that we have real data
+    if proj_df.empty:
+        raise ValueError("REAL PROJECTIONS REQUIRED: Please provide projections.csv with columns: name,team,pos,proj,p90,own")
+    
+    if own_df.empty:
+        raise ValueError("REAL OWNERSHIP REQUIRED: Please provide ownership.csv with columns: name,own")
     
     # Load schedule to get correct opponent teams
     schedule_df = pd.read_csv("out/week01/weekly_inputs.csv")

@@ -1,7 +1,7 @@
 
 import pandas as pd, numpy as np, math, random, itertools, collections
 from pathlib import Path
-from utils import read_weights, load_dk, load_optional, ownership_proxy, projection_proxy, lineup_score
+from utils import read_weights, load_dk, load_optional, lineup_score
 
 def pos_ok(lineup, to_add_pos):
     counts = collections.Counter([p["pos"] for p in lineup])
@@ -396,7 +396,7 @@ def main(weekly_path, edge_path, stacks_path, roles_path, dk_path, out_dir, proj
     stacks_df  = pd.read_csv(stacks_path)
     roles_df   = pd.read_csv(roles_path)
     dk_df      = load_dk(dk_path)
-    # Projections & ownership
+    # Projections & ownership - REAL DATA REQUIRED
     proj_df = None
     if projections_path and Path(projections_path).exists():
         proj_df = pd.read_csv(projections_path)
@@ -404,7 +404,7 @@ def main(weekly_path, edge_path, stacks_path, roles_path, dk_path, out_dir, proj
         if not needed.issubset(set(proj_df.columns)):
             raise ValueError("projections.csv needs columns: name,team,pos,proj,p90")
     else:
-        proj_df = projection_proxy(dk_df)
+        raise ValueError("REAL PROJECTIONS REQUIRED: Please provide projections.csv with columns: name,team,pos,proj,p90")
 
     own_df = None
     if ownership_path and Path(ownership_path).exists():
@@ -412,7 +412,7 @@ def main(weekly_path, edge_path, stacks_path, roles_path, dk_path, out_dir, proj
         if not {"name","own"}.issubset(set(own_df.columns)):
             raise ValueError("ownership.csv needs columns: name,own")
     else:
-        own_df = ownership_proxy(dk_df, weekly_df)
+        raise ValueError("REAL OWNERSHIP REQUIRED: Please provide ownership.csv with columns: name,own")
 
     # Build player rows
     players = build_player_rows(dk_df, proj_df, own_df)

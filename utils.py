@@ -61,7 +61,14 @@ def load_dk(dk_path: str) -> pd.DataFrame:
 def load_optional(path: str) -> pd.DataFrame:
     """Load optional projections or ownership file"""
     if path and os.path.exists(path):
-        return pd.read_csv(path)
+        try:
+            df = pd.read_csv(path)
+            # Check if the dataframe is empty or has no data rows
+            if df.empty or len(df) == 0:
+                return pd.DataFrame()
+            return df
+        except pd.errors.EmptyDataError:
+            return pd.DataFrame()
     return pd.DataFrame()
 
 def ownership_proxy(dk_df: pd.DataFrame, weekly_df: pd.DataFrame = None) -> pd.DataFrame:
