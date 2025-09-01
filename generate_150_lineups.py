@@ -308,6 +308,17 @@ def main():
     
     print(f"Loaded {len(players)} players")
     
+    # Apply positional minimum salary filters to avoid low-salary players who might not play much
+    original_count = len(players)
+    players = [p for p in players if (
+        (p["pos"] == "QB" and p["salary"] >= 4800) or
+        (p["pos"] == "RB" and p["salary"] >= 4100) or
+        (p["pos"] == "WR" and p["salary"] >= 3100) or
+        (p["pos"] == "TE" and p["salary"] >= 2600) or
+        (p["pos"] == "DST")
+    )]
+    print(f"After positional minimums: {len(players)} players (filtered out {original_count - len(players)} low-salary players)")
+    
     # Sort players by score
     for p in players:
         p["score"] = p["proj"] + 0.35*(p["p90"]-p["proj"]) - 0.03*p["own"]
@@ -358,7 +369,7 @@ def main():
             
             # Sort by salary (higher first) and pick top 2
             same_team_pass_catchers.sort(key=lambda x: x["salary"], reverse=True)
-            selected_pass_catchers = random.sample(same_team_pass_catchers[:min(5, len(same_team_pass_catchers))], 2)
+            selected_pass_catchers = random.sample(same_team_pass_catchers[:min(8, len(same_team_pass_catchers))], 2)
             lu.extend(selected_pass_catchers)
             
             # NO additional players from QB's team - stack is complete with 3 players total
@@ -368,8 +379,8 @@ def main():
             if not opponent_players:
                 continue
             
-            opponent_players.sort(key=lambda x: x["score"], reverse=True)
-            lu.append(random.choice(opponent_players[:min(5, len(opponent_players))]))
+            opponent_players.sort(key=lambda x: x["salary"], reverse=True)
+            lu.append(random.choice(opponent_players[:min(10, len(opponent_players))]))
             
             # Now fill remaining positions with players from OTHER teams (not QB's team, not opponent team)
             # This ensures we have: QB + 2 stack players + 1 bring-back + 5 other players
@@ -412,9 +423,10 @@ def main():
                 if not valid_players:
                     break
                 
-                # Sort by score and pick best available
-                valid_players.sort(key=lambda x: x["score"], reverse=True)
-                selected = random.choice(valid_players[:min(10, len(valid_players))])
+                # Sort by salary (higher first) to allow more salary variation
+                valid_players.sort(key=lambda x: x["salary"], reverse=True)
+                # Pick from top 20 players to allow more variation
+                selected = random.choice(valid_players[:min(20, len(valid_players))])
                 lu.append(selected)
                 available_players.remove(selected)
             
