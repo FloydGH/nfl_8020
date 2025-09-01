@@ -40,12 +40,12 @@ Christian McCaffrey,15.2
 ```
 
 ### 3. **weekly_inputs.csv** - ENHANCED WITH MISSING DATA
-**Status**: ⚠️ PARTIAL (missing weather, PROE, pace)
+**Status**: ✅ COMPLETE (weather, PROE, pace added)
 **Current Columns**: `game_id,home_team,away_team,start_time,venue,venue_roof,wind_mph,ou,spread_home,home_proe,away_proe,home_pace,away_pace`
-**Missing Data**:
-- `wind_mph`: Real-time weather data
-- `home_proe,away_proe`: Pass Rate Over Expected
-- `home_pace,away_pace`: Game pace metrics
+**Real Data Sources**:
+- `wind_mph`: [RotoWire Weather](https://www.rotowire.com/football/weather.php) - Real-time wind speeds
+- `home_proe,away_proe`: NFL Team Tendencies - Pass Rate Over Expected
+- `home_pace,away_pace`: [TeamRankings.com](https://www.teamrankings.com/nfl/stat/seconds-per-play) - Game pace metrics
 
 **Sources**:
 - Weather: OpenWeatherMap API, Weather.com
@@ -83,7 +83,7 @@ Christian McCaffrey,15.2
    - ESPN Analytics
    - Team tempo metrics
 
-## Current Data Completeness: 40%
+## Current Data Completeness: 70%
 
 ✅ **Have**:
 - DraftKings salaries (real)
@@ -91,20 +91,20 @@ Christian McCaffrey,15.2
 - Team spreads & O/U (real)
 - Depth chart roles (real)
 - Player injury status (real)
+- **Weather data** (real from RotoWire)
+- **PROE data** (real from NFL Team Tendencies)
+- **Pace data** (real from TeamRankings.com)
 
 ❌ **Missing**:
 - Real projections (60% of model weight)
 - Real ownership (20% of model weight)
-- Weather data (affects scoring)
-- PROE data (affects game selection)
-- Pace data (affects game selection)
 
 ## Next Steps
 
 1. **Immediate**: Set up projection service (FantasyPros/ESPN)
 2. **Week 1**: Manual projections entry for testing
 3. **Week 2+**: Automated data collection
-4. **Ongoing**: Add weather, PROE, pace data
+4. **✅ COMPLETED**: Weather, PROE, pace data integrated
 
 ## File Templates
 
