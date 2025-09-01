@@ -12,8 +12,8 @@ def pick_games(edge_df, weights):
     print(f"DEBUG: Tier B games: {len(tierB)}")
     print(f"DEBUG: Tier C games: {len(tierC)}")
     
-    # Keep top few
-    sel = pd.concat([tierA.head(3), tierB.head(2), tierC.head(1)], ignore_index=True)
+    # Keep ALL games to generate 150 lineups
+    sel = pd.concat([tierA, tierB, tierC], ignore_index=True)
     print(f"DEBUG: Selected {len(sel)} games:")
     print(sel[["home_team", "away_team", "tier", "edge_score"]])
     

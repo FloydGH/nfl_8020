@@ -34,11 +34,11 @@ def normalize_0_100(value: float, min_val: float, max_val: float) -> float:
 
 def tier_label(edge_score: float) -> str:
     """Convert edge score to tier label"""
-    if edge_score >= 80:
+    if edge_score >= 65:
         return "A"
-    elif edge_score >= 60:
+    elif edge_score >= 50:
         return "B"
-    elif edge_score >= 40:
+    elif edge_score >= 35:
         return "C"
     else:
         return "D"
@@ -194,7 +194,6 @@ def load_weekly_inputs(path:str)->pd.DataFrame:
         # columns expected downstream
         need = [
             "game_id","home_team","away_team","venue_roof","wind_mph",
-            "ou_consensus","spread_home_consensus",
             "proe_home","proe_away","pace_rank_home","pace_rank_away",
             "wr1_tgt_share_home","wr2_tgt_share_home","te_route_share_home","rb_route_share_home",
             "wr1_tgt_share_away","wr2_tgt_share_away","te_route_share_away","rb_route_share_away",

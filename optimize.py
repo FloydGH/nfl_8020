@@ -6,11 +6,11 @@ from utils import read_weights, load_dk, load_optional, ownership_proxy, project
 def pos_ok(lineup, to_add_pos):
     counts = collections.Counter([p["pos"] for p in lineup])
     
-    # During building, be more flexible to allow reaching 9 players
+    # During building, be very flexible to allow reaching 9 players
     # Final validation will happen later with finalize_positions
     if len(lineup) < 9:
-        # Allow more flexibility during building
-        limits = {"QB":1,"RB":4,"WR":5,"TE":3,"DST":1}
+        # Allow maximum flexibility during building
+        limits = {"QB":1,"RB":5,"WR":6,"TE":4,"DST":1}
     else:
         # Strict limits for final validation
         limits = {"QB":1,"RB":3,"WR":4,"TE":2,"DST":1}
@@ -112,9 +112,29 @@ def build_lineups_150(dk_df, edge_df, stacks_df, players, cfg):
         if sub10 < cfg["min_sub10_owned_per_lu"]: return False
         return True
 
-    # Helper to get player object or None
+    # Helper to get player object or None with fuzzy matching
     def P(name):
-        return by_name.get(name)
+        # Try exact match first
+        if name in by_name:
+            return by_name[name]
+        
+        # Try fuzzy matching for common name variations
+        if not name:
+            return None
+            
+        # Remove common suffixes
+        clean_name = name.replace(" Sr.", "").replace(" Jr.", "").replace(" III", "").replace(" II", "").replace(" IV", "")
+        
+        # Try exact match with cleaned name
+        if clean_name in by_name:
+            return by_name[clean_name]
+        
+        # Try partial matching (name contains)
+        for player_name, player in by_name.items():
+            if clean_name in player_name or player_name in clean_name:
+                return player
+        
+        return None
 
     # compile allowable shells proportions
     shells = [
@@ -165,17 +185,14 @@ def build_lineups_150(dk_df, edge_df, stacks_df, players, cfg):
             continue
         print(f"DEBUG: Building {need} lineups for tier {tier} with {len(stacks)} stacks")
         
-        # cycle through stacks round-robin
+        # Try to build lineups from stacks first
         idx = 0
         attempts = 0
-        while need > 0 and attempts < need*20:
+        while need > 0 and attempts < need*10 and idx < len(stacks):
             attempts += 1
-            s = stacks[idx % len(stacks)]
+            s = stacks[idx]
             idx += 1
-            # determine weekly row to choose shell
-            wkrow = weekly_map.get((s["home_team"] if "home_team" in s else s.get("team_qb"), s.get("opp_team")), {})
-            shell = "3v1"  # simplified; could call pick_shell if we had full weekly row here
-
+            
             # Pull players
             # Parse stack string (e.g., '["Ja\'Marr Chase", \'Tee Higgins\']')
             stack_str = s["stack"]
@@ -226,6 +243,7 @@ def build_lineups_150(dk_df, edge_df, stacks_df, players, cfg):
                 best_player = None
                 best_score = -1
                 
+                # First try to find players for specific needed positions
                 for p in players:
                     if p["name"] in {x["name"] for x in lu}:
                         continue
@@ -244,8 +262,26 @@ def build_lineups_150(dk_df, edge_df, stacks_df, players, cfg):
                         best_score = score
                         best_player = p
                 
+                # If no player found for needed positions, try any valid position
                 if best_player is None:
-                    print(f"DEBUG: Cannot find player for needed positions {needed_positions}, lineup stuck at {len(lu)} players")
+                    for p in players:
+                        if p["name"] in {x["name"] for x in lu}:
+                            continue
+                        if p["team"] in core_teams and p["pos"] != "DST":
+                            continue
+                        if not pos_ok(lu, p["pos"]):
+                            continue
+                        if sum(x["salary"] for x in lu) + p["salary"] > 50000:
+                            continue
+                        
+                        # Calculate player score
+                        score = p["proj"] + 0.35*(p["p90"]-p["proj"]) - 0.03*p["own"]
+                        if score > best_score:
+                            best_score = score
+                            best_player = p
+                
+                if best_player is None:
+                    print(f"DEBUG: Cannot find any valid player, lineup stuck at {len(lu)} players")
                     break
                 
                 lu.append(best_player)
@@ -286,6 +322,52 @@ def build_lineups_150(dk_df, edge_df, stacks_df, players, cfg):
             lineups.append((score, lu))
             need -= 1
             print(f"DEBUG: Successfully built lineup {len(lineups)} for tier {tier}")
+
+        # If we still need more lineups for this tier, generate them without requiring exact stack matches
+        if need > 0:
+            print(f"DEBUG: Still need {need} more lineups for tier {tier}, generating fallback lineups")
+            
+            # Simple fallback: generate lineups with high-scoring QBs and best available players
+            qb_pool = [p for p in players if p["pos"] == "QB"]
+            qb_pool.sort(key=lambda x: x["proj"] + 0.35*(x["p90"]-x["proj"]) - 0.03*x["own"], reverse=True)
+            
+            for qb in qb_pool[:min(need*3, len(qb_pool))]:  # Try more QBs
+                if need <= 0:
+                    break
+                    
+                # Start with QB
+                lu = [qb]
+                
+                # Add best available players, prioritizing required positions
+                available_players = [p for p in players if p["name"] != qb["name"]]
+                available_players.sort(key=lambda x: x["proj"] + 0.35*(x["p90"]-x["proj"]) - 0.03*x["own"], reverse=True)
+                
+                # Fill to 9 players
+                for p in available_players:
+                    if len(lu) >= 9:
+                        break
+                    if p["name"] in {x["name"] for x in lu}:
+                        continue
+                    if not pos_ok(lu, p["pos"]):
+                        continue
+                    if sum(x["salary"] for x in lu) + p["salary"] > 50000:
+                        continue
+                    lu.append(p)
+                
+                # Validate and add lineup
+                if len(lu) == 9 and finalize_positions(lu):
+                    ssum = sum(p["salary"] for p in lu)
+                    if 49600 <= ssum <= 50000 and ok_ownership(lu):
+                        # Check uniqueness
+                        five = tuple(sorted([p["name"] for p in lu[:5]]))
+                        if five not in seen_five_sets:
+                            seen_five_sets.add(five)
+                            score = lineup_score(lu, 0.35, 0.03)
+                            lineups.append((score, lu))
+                            need -= 1
+                            print(f"DEBUG: Built fallback lineup {len(lineups)} for tier {tier}")
+                            if need <= 0:
+                                break
 
     print(f"DEBUG: Built {len(lineups)} total lineups")
     # Sort by score desc and take top 150

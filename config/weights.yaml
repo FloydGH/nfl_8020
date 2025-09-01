@@ -6,17 +6,17 @@ w_spread: 0.15
 w_venue_weather: 0.15
 
 # Tier allocation for lineup building
-tier_A_share: 0.7
-tier_B_share: 0.25
-tier_C_share: 0.05
+tier_A_share: 0.0
+tier_B_share: 0.7
+tier_C_share: 0.3
 
 # Lineup constraints
-min_salary: 49600
+min_salary: 49000
 max_salary: 50000
 low_owned_threshold_pct: 5
-min_low_owned_per_lu: 1
-min_sub10_owned_per_lu: 2
-cum_own_cap_pct: 125
+min_low_owned_per_lu: 0
+min_sub10_owned_per_lu: 0
+cum_own_cap_pct: 200
 
 # Stack configuration
 allow_3v0_spread_cutoff: 7.5
