@@ -52,7 +52,7 @@ def format_lineup_for_display(lineup):
     }
 
 def format_lineup_for_draftkings(lineup, lineup_num):
-    """Format lineup for DraftKings CSV upload"""
+    """Format lineup for DraftKings CSV upload - exact format from DKSalaries_upload_format.csv"""
     # Sort players by position priority
     qb = [p for p in lineup if p["pos"] == "QB"][0]
     rbs = sorted([p for p in lineup if p["pos"] == "RB"], key=lambda x: x["salary"], reverse=True)
@@ -71,135 +71,22 @@ def format_lineup_for_draftkings(lineup, lineup_num):
     
     flex = max(remaining, key=lambda x: x["salary"]) if remaining else None
     
-    # Create DraftKings format rows
-    rows = []
+    # Create DraftKings format row - just player IDs in correct positions
+    row = {
+        "QB": qb.get('id', ''),
+        "RB": rbs[0].get('id', '') if len(rbs) > 0 else '',
+        "RB.1": rbs[1].get('id', '') if len(rbs) > 1 else '',
+        "WR": wrs[0].get('id', '') if len(wrs) > 0 else '',
+        "WR.1": wrs[1].get('id', '') if len(wrs) > 1 else '',
+        "WR.2": wrs[2].get('id', '') if len(wrs) > 2 else '',
+        "TE": tes[0].get('id', '') if len(tes) > 0 else '',
+        "FLEX": flex.get('id', '') if flex else '',
+        "DST": dst.get('id', ''),
+        "": "",  # Empty column
+        "Instructions": ""  # Empty column
+    }
     
-    # QB
-    rows.append({
-        "Position": "QB",
-        "Name + ID": f"{qb['name']} ({qb.get('id', '')})",
-        "Name": qb['name'],
-        "ID": qb.get('id', ''),
-        "Roster Position": "QB",
-        "Salary": qb['salary'],
-        "Game Info": "",
-        "TeamAbbrev": qb['team'],
-        "AvgPointsPerGame": qb.get('proj', 0)
-    })
-    
-    # RB1
-    if len(rbs) > 0:
-        rows.append({
-            "Position": "RB",
-            "Name + ID": f"{rbs[0]['name']} ({rbs[0].get('id', '')})",
-            "Name": rbs[0]['name'],
-            "ID": rbs[0].get('id', ''),
-            "Roster Position": "RB",
-            "Salary": rbs[0]['salary'],
-            "Game Info": "",
-            "TeamAbbrev": rbs[0]['team'],
-            "AvgPointsPerGame": rbs[0].get('proj', 0)
-        })
-    
-    # RB2
-    if len(rbs) > 1:
-        rows.append({
-            "Position": "RB",
-            "Name + ID": f"{rbs[1]['name']} ({rbs[1].get('id', '')})",
-            "Name": rbs[1]['name'],
-            "ID": rbs[1].get('id', ''),
-            "Roster Position": "RB",
-            "Salary": rbs[1]['salary'],
-            "Game Info": "",
-            "TeamAbbrev": rbs[1]['team'],
-            "AvgPointsPerGame": rbs[1].get('proj', 0)
-        })
-    
-    # WR1
-    if len(wrs) > 0:
-        rows.append({
-            "Position": "WR",
-            "Name + ID": f"{wrs[0]['name']} ({wrs[0].get('id', '')})",
-            "Name": wrs[0]['name'],
-            "ID": wrs[0].get('id', ''),
-            "Roster Position": "WR",
-            "Salary": wrs[0]['salary'],
-            "Game Info": "",
-            "TeamAbbrev": wrs[0]['team'],
-            "AvgPointsPerGame": wrs[0].get('proj', 0)
-        })
-    
-    # WR2
-    if len(wrs) > 1:
-        rows.append({
-            "Position": "WR",
-            "Name + ID": f"{wrs[1]['name']} ({wrs[1].get('id', '')})",
-            "Name": wrs[1]['name'],
-            "ID": wrs[1].get('id', ''),
-            "Roster Position": "WR",
-            "Salary": wrs[1]['salary'],
-            "Game Info": "",
-            "TeamAbbrev": wrs[1]['team'],
-            "AvgPointsPerGame": wrs[1].get('proj', 0)
-        })
-    
-    # WR3
-    if len(wrs) > 2:
-        rows.append({
-            "Position": "WR",
-            "Name + ID": f"{wrs[2]['name']} ({wrs[2].get('id', '')})",
-            "Name": wrs[2]['name'],
-            "ID": wrs[2].get('id', ''),
-            "Roster Position": "WR",
-            "Salary": wrs[2]['salary'],
-            "Game Info": "",
-            "TeamAbbrev": wrs[2]['team'],
-            "AvgPointsPerGame": wrs[2].get('proj', 0)
-        })
-    
-    # TE1
-    if len(tes) > 0:
-        rows.append({
-            "Position": "TE",
-            "Name + ID": f"{tes[0]['name']} ({tes[0].get('id', '')})",
-            "Name": tes[0]['name'],
-            "ID": tes[0].get('id', ''),
-            "Roster Position": "TE",
-            "Salary": tes[0]['salary'],
-            "Game Info": "",
-            "TeamAbbrev": tes[0]['team'],
-            "AvgPointsPerGame": tes[0].get('proj', 0)
-        })
-    
-    # FLEX
-    if flex:
-        flex_pos = flex['pos']
-        rows.append({
-            "Position": flex_pos,
-            "Name + ID": f"{flex['name']} ({flex.get('id', '')})",
-            "Name": flex['name'],
-            "ID": flex.get('id', ''),
-            "Roster Position": "FLEX",
-            "Salary": flex['salary'],
-            "Game Info": "",
-            "TeamAbbrev": flex['team'],
-            "AvgPointsPerGame": flex.get('proj', 0)
-        })
-    
-    # DST
-    rows.append({
-        "Position": "DST",
-        "Name + ID": f"{dst['name']} ({dst.get('id', '')})",
-        "Name": dst['name'],
-        "ID": dst.get('id', ''),
-        "Roster Position": "DST",
-        "Salary": dst['salary'],
-        "Game Info": "",
-        "TeamAbbrev": dst['team'],
-        "AvgPointsPerGame": dst.get('proj', 0)
-    })
-    
-    return rows
+    return row
 
 def pos_ok(lineup, to_add_pos):
     counts = collections.Counter([p["pos"] for p in lineup])
@@ -300,7 +187,7 @@ def main():
         
         players.append({
             "name": row["name"], "team": row["team"], "pos": row["pos"], "salary": int(row["salary"]),
-            "id": row.get("id", ""),  # Add player ID for DraftKings format
+            "id": str(row["id"]),  # Add player ID for DraftKings format
             "proj": float(proj_row["proj"]) if proj_row is not None else 0.0,
             "p90": float(proj_row["p90"]) if proj_row is not None else 0.0,
             "own": float(own_row["own"]) if own_row is not None else 5.0
@@ -509,14 +396,42 @@ def main():
     df.to_csv("out/week01/lineups_150_proper_stacks.csv", index=False)
     print(f"Exported {len(lineups)} lineups to out/week01/lineups_150_proper_stacks.csv")
     
-    # Export lineups in DraftKings upload format
-    all_dk_rows = []
-    for i, (score, lu) in enumerate(lineups):
-        dk_rows = format_lineup_for_draftkings(lu, i + 1)
-        all_dk_rows.extend(dk_rows)
+    # Export lineups in DraftKings upload format - exact format from DKSalaries_upload_format.csv
+    import csv
     
-    dk_df = pd.DataFrame(all_dk_rows)
-    dk_df.to_csv("out/week01/lineups_150_draftkings_upload.csv", index=False)
+    with open("out/week01/lineups_150_draftkings_upload.csv", "w", newline='') as f:
+        fieldnames = ["QB", "RB", "RB.1", "WR", "WR.1", "WR.2", "TE", "FLEX", "DST", "", "Instructions"]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        
+        # Write header row
+        writer.writerow({
+            "QB": "QB", "RB": "RB", "RB.1": "RB", "WR": "WR", "WR.1": "WR", "WR.2": "WR", 
+            "TE": "TE", "FLEX": "FLEX", "DST": "DST", "": "", "Instructions": "Instructions"
+        })
+        
+        # Write instruction rows (empty except for Instructions column)
+        for i in range(1, 6):
+            row = {field: "" for field in fieldnames}
+            if i == 1:
+                row["Instructions"] = "1. Locate the player you want to select in the list below"
+            elif i == 2:
+                row["Instructions"] = "2. Copy the ID of your player (you can use the Name + ID column or the ID column)"
+            elif i == 3:
+                row["Instructions"] = "3. Paste the ID into the roster position desired"
+            elif i == 4:
+                row["Instructions"] = "4. You must include an ID for each player; you cannot use just the player's name"
+            elif i == 5:
+                row["Instructions"] = "5. You can create up to 500 lineups per file"
+            writer.writerow(row)
+        
+        # Write empty row
+        writer.writerow({field: "" for field in fieldnames})
+        
+        # Write lineup rows
+        for i, (score, lu) in enumerate(lineups, 1):
+            row = format_lineup_for_draftkings(lu, i)
+            writer.writerow(row)
+    
     print(f"Exported {len(lineups)} lineups to out/week01/lineups_150_draftkings_upload.csv")
 
 if __name__ == "__main__":

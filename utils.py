@@ -55,7 +55,8 @@ def load_dk(dk_path: str) -> pd.DataFrame:
     df["pos"] = df["Position"]
     df["salary"] = df["Salary"]
     df["name"] = df["Name"]
-    return df[["name", "team", "pos", "salary"]]
+    df["id"] = df["ID"]  # Include player ID for DraftKings upload format
+    return df[["name", "team", "pos", "salary", "id"]]
 
 def load_optional(path: str) -> pd.DataFrame:
     """Load optional projections or ownership file"""
